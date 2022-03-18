@@ -20,7 +20,7 @@ public class Game
         List<Card> list = new List<Card>();
         for (int i = 0; i < 8; i++)
             list.Add(CardManager.AllCards[Random.Range(0, CardManager.AllCards.Count)]);
-        return list; //Рука вмещает в себя максимум 8 карт
+        return list; //Р СѓРєР° РІРјРµС‰Р°РµС‚ РІ СЃРµР±СЏ РјР°РєСЃРёРјСѓРј 8 РєР°СЂС‚
 
     }
 }
@@ -155,6 +155,7 @@ public class GameManagerScr : MonoBehaviour
             {
                 card.Card.CanAttack = true;
                 card.Info.HighlightCard(true);
+                card.Ability.OnNewTurn();
             }
             while (TurnTime-- > 0)
             {
@@ -166,7 +167,10 @@ public class GameManagerScr : MonoBehaviour
         else
         {
             foreach (var card in EnemyFieldCards)
+            {
                 card.Card.CanAttack = true;
+                card.Ability.OnNewTurn();
+            }
 
             StartCoroutine(EnemyTurn(EnemyHandCards));
         }
@@ -182,14 +186,13 @@ public class GameManagerScr : MonoBehaviour
         for (int i = 0; i < count; i++)
         {
             if (EnemyFieldCards.Count > 3 || EnemyHandCards.Count == 0)
-                break; //Огранчение до 4 карт на поле
+                break; //РћРіСЂР°РЅС‡РµРЅРёРµ РґРѕ 4 РєР°СЂС‚ РЅР° РїРѕР»Рµ
 
 
             cards[0].GetComponent<CardMovementScr>().MoveToField(EnemyField);
 
             yield return new WaitForSeconds(.31f);
 
-            cards[0].Info.ShowCardInfo();
             cards[0].transform.SetParent(EnemyField);
 
             cards[0].OnCast();
@@ -197,18 +200,21 @@ public class GameManagerScr : MonoBehaviour
 
         yield return new WaitForSeconds(1);
 
-        foreach (var activeCard in EnemyFieldCards.FindAll(x => x.Card.CanAttack))
+        while (EnemyFieldCards.Exists(x => x.Card.CanAttack))
         {
-            if (Random.Range(0, 2) == 0 && PlayerFieldCards.Count > 0)
+            var activeCard = EnemyFieldCards.FindAll(x => x.Card.CanAttack)[0];
+            bool hasProvocation = PlayerFieldCards.Exists(x => x.Card.IsProvocation);
+
+            if (hasProvocation || Random.Range(0, 2) == 0 && PlayerFieldCards.Count > 0)
             {
-                if (PlayerFieldCards.Count == 0)
-                    break;
+                CardController enemy;
 
-                var enemy = PlayerFieldCards[Random.Range(0, PlayerFieldCards.Count)];
+                if (hasProvocation)
+                    enemy = PlayerFieldCards.Find(x => x.Card.IsProvocation);
+                else
+                    enemy = PlayerFieldCards[Random.Range(0, PlayerFieldCards.Count)];
 
-                activeCard.Card.CanAttack = false;
-
-                activeCard.GetComponent<CardMovementScr>().MoveToTarget(enemy.transform);
+                activeCard.Movement.MoveToTarget(enemy.transform);
                 yield return new WaitForSeconds(.5f);
 
                 CardsFight(enemy, activeCard);
@@ -223,7 +229,7 @@ public class GameManagerScr : MonoBehaviour
                 DamageHero(activeCard, false);
             }
 
-            yield return new WaitForSeconds(.2f); // 0.2 секунды перед новой анимацией
+            yield return new WaitForSeconds(.2f); // 0.2 СЃРµРєСѓРЅРґС‹ РїРµСЂРµРґ РЅРѕРІРѕР№ Р°РЅРёРјР°С†РёРµР№
         }
 
         yield return new WaitForSeconds(1);
@@ -316,9 +322,17 @@ public class GameManagerScr : MonoBehaviour
 
     public void HighlightTargets(bool highlight)
     {
+        List<CardController> targets = new List<CardController>();
+
+        if (EnemyFieldCards.Exists(x => x.Card.IsProvocation))
+            targets = EnemyFieldCards.FindAll(x => x.Card.IsProvocation);
+        else
+        {
+            targets = EnemyFieldCards;
+            EnemyHero.HighlightAsTarget(highlight);
+        }
+
         foreach (var card in EnemyFieldCards)
             card.Info.HighlightAsTarget(highlight);
-
-        EnemyHero.HighlightAsTarget(highlight);
     }
 }
