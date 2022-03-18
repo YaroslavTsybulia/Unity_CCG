@@ -8,6 +8,7 @@ public class CardController : MonoBehaviour
     public bool IsPlayerCard;
     public CardInfoScr Info;
     public CardMovementScr Movement;
+    public CardAbility Ability;
 
     GameManagerScr gameManager;
 
@@ -37,21 +38,29 @@ public class CardController : MonoBehaviour
         {
             gameManager.EnemyHandCards.Remove(this);
             gameManager.EnemyFieldCards.Add(this);
-            
+            Info.ShowCardInfo();
         }
         Card.IsPlaced = true;
+
+        if (Card.HasAbility)
+            Ability.OnCast(); //Если у карты есть спопособности, вызываем это
 
     }
 
     public void OnTakeDamage(CardController player = null)
     {
         CheckForAlive();
+        Ability.OnDamageTake(player);
     }
 
     public void OnDamageDeal()
     {
+        Card.TimesDealedDamage++;
         Card.CanAttack = false;
         Info.HighlightCard(false);
+
+        if (Card.HasAbility)
+            Ability.OnDamageDeal();
     }
 
 
