@@ -102,7 +102,7 @@ public class CardMovementScr : MonoBehaviour, IBeginDragHandler, IDragHandler, I
 
     public void MoveToField(Transform field)
     {
-        transform.DOMove(field.position, .3f); //перемещаем карты(куда, как долго);
+        transform.DOMove(field.position, .3f); //РїРµСЂРµРјРµС‰Р°РµРј РєР°СЂС‚С‹(РєСѓРґР°, РєР°Рє РґРѕР»РіРѕ);
     }
 
     public void MoveToTarget(Transform target)
