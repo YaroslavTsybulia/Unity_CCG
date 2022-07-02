@@ -11,7 +11,7 @@ public class CardInfoScr : MonoBehaviour
     public Image Logo, Element, CardType;
     public TextMeshProUGUI Name, CardTypeText, Attack, Defense;
     public GameObject HideObj, HighlightedObj;
-    public Color NormalCol, TargetCol;
+    public Color NormalCol, TargetCol, SpellTargetCol;
 
 
     public void HideCardInfo()
@@ -50,4 +50,12 @@ public class CardInfoScr : MonoBehaviour
     {
         HighlightedObj.SetActive(highlight);
     }
+
+    public void HighlightAsSpellTarget(bool highlight)
+    {
+        GetComponent<Image>().color = highlight ?
+                                      SpellTargetCol :
+                                      NormalCol;
+    }
+
 }
