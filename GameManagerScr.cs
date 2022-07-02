@@ -19,7 +19,7 @@ public class Game
     {
         List<Card> list = new List<Card>();
         for (int i = 0; i < 8; i++)
-            list.Add(CardManager.AllCards[Random.Range(0, CardManager.AllCards.Count)]);
+            list.Add(CardManager.AllCards[Random.Range(0, CardManager.AllCards.Count)].GetCopy());
         return list; //Рука вмещает в себя максимум 8 карт
 
     }
@@ -34,13 +34,13 @@ public class GameManagerScr : MonoBehaviour
     public GameObject CardPref;
     int Turn, TurnTime = 30;
     public TextMeshProUGUI TurnTimeTxt;
-    public Button EndTurnBtn, SurrenderBtn;
+    public Button EndTurnBtn, SurrenderBtn, InfoBtn;
 
 
     public int PlayerHP, EnemyHP;
     public TextMeshProUGUI PlayerHPTxt, EnemyHPTxt;
 
-    public GameObject ResultGO;
+    public GameObject ResultGO, DescriptionGO;
     public TextMeshProUGUI ResultTxt, ResultReason;
 
     public AttackedHero EnemyHero, PlayerHero;
@@ -259,6 +259,12 @@ public class GameManagerScr : MonoBehaviour
         ResultReason.text = "surrended";
     }
 
+    public void CardInformation()
+    {
+        DescriptionGO.SetActive(true);
+        StopAllCoroutines();
+    }
+
 
     void GiveNewCards()
     {
@@ -280,7 +286,7 @@ public class GameManagerScr : MonoBehaviour
     }
 
 
-    void ShowHP()
+    public void ShowHP()
     {
         EnemyHPTxt.text = EnemyHP.ToString();
         PlayerHPTxt.text = PlayerHP.ToString();
@@ -300,7 +306,7 @@ public class GameManagerScr : MonoBehaviour
     }
 
 
-    void CheckForResult()
+    public void CheckForResult()
     {
         if (EnemyHP == 0 || PlayerHP == 0)
         {
@@ -315,24 +321,42 @@ public class GameManagerScr : MonoBehaviour
             else
             {
               ResultTxt.text = "YOU LOSE";
-              ResultReason.text = "opponent's life points became 0";
+              ResultReason.text = "your life points became 0";
             }
         }
     }
 
-    public void HighlightTargets(bool highlight)
+    public void HighlightTargets(CardController player, bool highlight)
     {
         List<CardController> targets = new List<CardController>();
 
-        if (EnemyFieldCards.Exists(x => x.Card.IsProvocation))
-            targets = EnemyFieldCards.FindAll(x => x.Card.IsProvocation);
-        else
+        if(player.Card.IsSpell)
         {
-            targets = EnemyFieldCards;
-            EnemyHero.HighlightAsTarget(highlight);
+            if (player.Card.SpellTarget == Card.TargetType.NO_TARGET)
+                targets = new List<CardController>();
+            else if (player.Card.SpellTarget == Card.TargetType.PLAYER_CARD_TARGET)
+                targets = PlayerFieldCards;
+            else
+                targets = EnemyFieldCards;
         }
 
+        else
+        { 
+          if (EnemyFieldCards.Exists(x => x.Card.IsProvocation))
+              targets = EnemyFieldCards.FindAll(x => x.Card.IsProvocation);
+          else
+          {
+              targets = EnemyFieldCards;
+
+              EnemyHero.HighlightAsTarget(highlight);
+          }
+        }
         foreach (var card in EnemyFieldCards)
-            card.Info.HighlightAsTarget(highlight);
+        {
+            if (player.Card.IsSpell)
+                card.Info.HighlightAsSpellTarget(highlight);
+            else
+                card.Info.HighlightAsTarget(highlight);
+        }
     }
 }
