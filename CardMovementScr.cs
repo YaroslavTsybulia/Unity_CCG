@@ -36,8 +36,8 @@ public class CardMovementScr : MonoBehaviour, IBeginDragHandler, IDragHandler, I
         if (!IsDragable)
             return;
 
-          if (CC.Card.CanAttack)
-            GameManagerScr.Instance.HighlightTargets(true);
+          if (CC.Card.IsSpell || CC.Card.CanAttack)
+            GameManagerScr.Instance.HighlightTargets(CC, true);
 
         TempCardGO.transform.SetParent(DefaultParent);
         TempCardGO.transform.SetSiblingIndex(transform.GetSiblingIndex());
@@ -55,14 +55,16 @@ public class CardMovementScr : MonoBehaviour, IBeginDragHandler, IDragHandler, I
 
         transform.position = newPos + offset;
 
-        if (TempCardGO.transform.parent != DefaultTempCardParent)
+        if (!CC.Card.IsSpell)
         {
-            TempCardGO.transform.SetParent(DefaultTempCardParent);
+            if (TempCardGO.transform.parent != DefaultTempCardParent)
+            {
+                TempCardGO.transform.SetParent(DefaultTempCardParent);
+            }
+
+            if (DefaultParent.GetComponent<DropPlaceScr>().Type != FieldType.SELF_FIELD_1)
+                CheckPosition();
         }
-
-        if (DefaultParent.GetComponent<DropPlaceScr>().Type != FieldType.SELF_FIELD_1)
-
-            CheckPosition();
     }
 
     public void OnEndDrag(PointerEventData eventData)
@@ -70,7 +72,7 @@ public class CardMovementScr : MonoBehaviour, IBeginDragHandler, IDragHandler, I
         if (!IsDragable)
             return;
 
-        GameManagerScr.Instance.HighlightTargets(false);
+        GameManagerScr.Instance.HighlightTargets(CC, false);
 
         transform.SetParent(DefaultParent);
         GetComponent<CanvasGroup>().blocksRaycasts = true;
